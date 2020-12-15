@@ -10,7 +10,7 @@ pub struct LineError {
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Cound not find file {0}")]
-    MissingFile(String),
+    MissingFile(String, #[source] Box<dyn std::error::Error>),
     #[error("The id {0} is not known")]
     ReferenceError(String),
     #[error("Could not read GTFS: {0} is neither a file nor a directory")]

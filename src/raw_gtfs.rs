@@ -90,7 +90,7 @@ where
         .unwrap_or_else(|| "invalid_file_name")
         .to_string();
     File::open(path)
-        .map_err(|e| Error::MissingFile(format!("Could not find file: {}", e)))
+        .map_err(|e| Error::MissingFile(file_name.clone(), Box::new(e)))
         .and_then(|r| read_objs(r, &file_name))
 }
 
@@ -119,13 +119,13 @@ where
         .get(&file_name)
         .map(|i| {
             read_objs(
-                archive.by_index(*i).map_err(|_| {
-                    Error::MissingFile(format!("Could not find file: {}", file_name.clone()))
+                archive.by_index(*i).map_err(|e| {
+                    Error::MissingFile( file_name.to_owned(), Box::new(e))
                 })?,
                 file_name,
             )
         })
-        .unwrap_or_else(|| Err(Error::MissingFile(file_name.to_owned())))
+        .unwrap_or_else(|| Err(Error::MissingFile(file_name.to_owned(), Box::new(zip::result::ZipError::FileNotFound))))
 }
 
 fn read_optional_file<O, T>(
@@ -139,8 +139,8 @@ where
 {
     file_mapping.get(&file_name).map(|i| {
         read_objs(
-            archive.by_index(*i).map_err(|_| {
-                Error::MissingFile(format!("Could not find file: {}", file_name.clone()))
+            archive.by_index(*i).map_err(|e| {
+                Error::MissingFile(file_name.to_owned(), Box::new(e))
             })?,
             file_name,
         )
